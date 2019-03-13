@@ -24,6 +24,9 @@ namespace AppRelacionamentos
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Adicionaremos o serviço, que será o contexto do Banco de dados
+            //services.AddDbContext<DataContext>(x => x.Use)
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
