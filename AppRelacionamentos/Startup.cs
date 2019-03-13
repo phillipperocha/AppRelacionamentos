@@ -27,9 +27,9 @@ namespace AppRelacionamentos
         public void ConfigureServices(IServiceCollection services)
         {
             // Adicionaremos o serviço, que será o contexto do Banco de dados
-            // UseSqlite("SqliteConnection") para o SQLite
-            // UseMySql("MySqlConnection") para o MySql
-            services.AddDbContext<DataContext>(x => x.UseSqlite("SqliteConnection"));
+            // UseSqlite(Configuration.getConnectionString("SqliteConnection") para o SQLite
+            // UseMySql(Configuration.GetConnectionString("MySqlConnection")) para o MySql
+            services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("SqliteConnection")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
