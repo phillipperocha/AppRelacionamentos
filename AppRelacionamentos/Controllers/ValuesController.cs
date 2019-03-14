@@ -20,18 +20,26 @@ namespace AppRelacionamentos.Controllers
         }
         // GET api/values
         [HttpGet]
-        public IActionResult GetValues()
+        // Primeiro dizemos ao método que ele deve ser assíncrono
+        // E daí retornamos uma tarefa (Task) de IActionResult, em vez do próprio IActionResult
+        // Uma Task representa uma operação assíncrona que pode retornar um valor
+        // O que isse quer dizer é que qualquer coisa que estamos esperando dentro de nosso método
+        // Manterá a nossa Thread aberta e não bloqueará as requisições enquanto espera pela resposta.
+        public async Task<IActionResult> GetValues()
         {
-            var values = this.context.Values.ToList();
-            
+            // Agora aqui no método, nós precisaremos informar que ele deverá esperar por essa resposta
+            // Para isso utilizaremos a palavra-chave "await". Mas daí teremos que usar uma
+            // versão async da nossa ToList(). Agora esse método é um método assíncrono.
+            var values = await this.context.Values.ToListAsync();
+
             return Ok(values);
         }
 
         // GET api/values/5
         [HttpGet("{id}")]
-        public IActionResult GetValue(int id)
+        public async Task<IActionResult> GetValue(int id)
         {
-            var value = this.context.Values.FirstOrDefault(v => v.Id == id);
+            var value = await this.context.Values.FirstOrDefaultAsync(v => v.Id == id);
 
             return Ok(value);
         }
