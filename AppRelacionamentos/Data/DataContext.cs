@@ -31,5 +31,6 @@ namespace AppRelacionamentos.Data
         // Isso é o que precisamos da nossa classe DataContext.
         // Agora precisamos informar a nossa aplicação sobre isso na nossa classe Startup.cs
 
+        public DbSet<User> Users { get; set; }
     }
 }
