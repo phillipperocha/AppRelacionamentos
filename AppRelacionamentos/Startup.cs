@@ -26,14 +26,11 @@ namespace AppRelacionamentos
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Adicionaremos o serviço, que será o contexto do Banco de dados
-            // UseSqlite(Configuration.getConnectionString("SqliteConnection") para o SQLite
-            // UseMySql(Configuration.GetConnectionString("MySqlConnection")) para o MySql
             services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("SqliteConnection")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
-            // Para adicionar o CORS, precisamos adicionar como serviço
             services.AddCors();   
+            // Agora, vamos adicionar o AuthRepository, e temos três maneiras. Escolheremos a Scoped
+            services.AddScoped<IAuthRepository, AuthRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,11 +41,6 @@ namespace AppRelacionamentos
                 app.UseDeveloperExceptionPage();
             }
 
-            // Agora como adicionamos o serviço, precisamos usá-lo
-            // Nós precisamos usá-lo com algumas configurações. Podemos dar um policyName ou uma ação
-            // Usaremos uma ação, já que nao temos policy names definidas por enqunato.
-
-            // Como é o começo do curso, deixaremos ele bem aberto e fraco. Permitindo tudo para podermos consumir.
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseMvc();

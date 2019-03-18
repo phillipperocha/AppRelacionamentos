@@ -20,11 +20,7 @@ namespace AppRelacionamentos.Controllers
         }
         // GET api/values
         [HttpGet]
-        // Primeiro dizemos ao método que ele deve ser assíncrono
-        // E daí retornamos uma tarefa (Task) de IActionResult, em vez do próprio IActionResult
-        // Uma Task representa uma operação assíncrona que pode retornar um valor
-        // O que isse quer dizer é que qualquer coisa que estamos esperando dentro de nosso método
-        // Manterá a nossa Thread aberta e não bloqueará as requisições enquanto espera pela resposta.
+       
         public async Task<IActionResult> GetValues()
         {
             // Agora aqui no método, nós precisaremos informar que ele deverá esperar por essa resposta
