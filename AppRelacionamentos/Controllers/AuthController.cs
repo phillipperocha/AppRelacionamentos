@@ -39,7 +39,7 @@ namespace AppRelacionamentos.Controllers
 
             var userToCreate = new User
             {
-                Username = userForRegisterDto.Username
+                UserName = userForRegisterDto.Username
             };
 
             var createdUser = await this.repo.Register(userToCreate, userForRegisterDto.Password);
@@ -64,7 +64,7 @@ namespace AppRelacionamentos.Controllers
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
-                new Claim(ClaimTypes.Name, userFromRepo.Username)
+                new Claim(ClaimTypes.Name, userFromRepo.UserName)
             };
 
             // Nós precisamos guardar essa chave dentro do AppSettings, porque nós vamos usá-la em
