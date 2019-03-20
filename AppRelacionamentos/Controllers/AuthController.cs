@@ -6,78 +6,97 @@ using System.Threading.Tasks;
 using AppRelacionamentos.Data;
 using AppRelacionamentos.Dtos;
 using AppRelacionamentos.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AppRelacionamentos.Controllers
 {
+    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly IAuthRepository repo;
         private readonly IConfiguration config;
+        private readonly UserManager<User> userManager;
+        private readonly SignInManager<User> singnInManager;
 
-        //(***) Injetando a configuração no nosso controller
-        public AuthController(IAuthRepository repo, IConfiguration config)
+        // Precisamos trazer tanto o UserManagger, como o SignInManager pra serem injetados aqui
+        public AuthController(IConfiguration config,
+            UserManager<User> userManager,
+            SignInManager<User> singnInManager
+            )
         {
+            this.singnInManager = singnInManager;
+            this.userManager = userManager;
             this.config = config;
-            this.repo = repo;
         }
 
-        // Como teremos tanto o login como registro pro post, precisamos especificar dentro o que virá
         [HttpPost("register")]
         public async Task<IActionResult> Register(UserForRegisterDto userForRegisterDto)
         {
-            // validate request
+            //var userToCreate = this.mapper.Map<User>(userForRegisterDto);
 
-            userForRegisterDto.Username = userForRegisterDto.Username.ToLower();
+            var user = new User();
 
-            if (await this.repo.UserExists(userForRegisterDto.Username))
-                return BadRequest("Username alredy exists.");
+            user.UserName = userForRegisterDto.Username;
 
-            var userToCreate = new User
+            var result = await this.userManager.CreateAsync(user, userForRegisterDto.Password);
+            
+            if (result.Succeeded) 
             {
-                UserName = userForRegisterDto.Username
-            };
+                return StatusCode(201);
+            }
 
-            var createdUser = await this.repo.Register(userToCreate, userForRegisterDto.Password);
-
-            return StatusCode(201);
+            return BadRequest(result.Errors);            
         }
 
         [HttpPost("login")]
-        // Criamos também um DTO
         public async Task<IActionResult> Login(UserForLoginDto userForLoginDto)
         {
-            var userFromRepo = await this.repo.Login(userForLoginDto.Username.ToLower(), userForLoginDto.Password);
+            Console.WriteLine("AEW PORRA" + userForLoginDto.Password);
+            // Agora vamos pegar o User, e temos maneiras distintas de pegá-lo.
+            var user = await this.userManager.FindByNameAsync(userForLoginDto.Username);
 
-            if (userFromRepo == null)
-                return Unauthorized();
+            // Aqui vamos verificar o password, passamos o usuário, a senha pra testar
+            // e um parâmetro no fim dizendo se é pra bloquear a conta caso ele erre o password
+            var result = await this.singnInManager
+                .CheckPasswordSignInAsync(user, userForLoginDto.Password, false);
 
-            // Agora faremos um token que será retornado ao usuário
-            // Nosso token conterá 2 bits de informações sobre o usuário
-            // Terá o ID do usuário e o username
-            // Nós podemos colocar algumas informações aqui porque quando o server receber o token
-            // Ele pode olhar dentro dele, mas não precisará ir no banco olhar o username ou ID
+            if (result.Succeeded)
+            {
+                var appUser = await this.userManager.Users //.Include(p => p.Photos)
+                    .FirstOrDefaultAsync(u => u.NormalizedUserName == userForLoginDto.Username.ToUpper());
+
+                // Quando tiver o mapper
+                // var userToReturn = this.mapper.Map<UseForListDto>(appUser);
+
+                return Ok(new
+                {
+                    token = GenerateJwtToken(appUser),
+                    // user = userToReturn
+                });
+            }
+
+           return Unauthorized();
+
+        }
+
+        // Vamos tirar do Login a responsabilidade de criar o JTW (JSON Web Token)
+        private string GenerateJwtToken(User user)
+        {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
-                new Claim(ClaimTypes.Name, userFromRepo.UserName)
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName)
             };
 
-            // Nós precisamos guardar essa chave dentro do AppSettings, porque nós vamos usá-la em
-            // alguns outros lugares. E nós precisamos guardá-la, quase do mesmo jeito que guardamos a nossa
-            // ConnectionString. 
-            // Nós precisaremos injetar a nossa configuração no nosso controller. (***)
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(this.config.GetSection("AppSettings:Token").Value));
-            // Agora precisamos criar isso dentro do appsettings.json
-
-            // Agora utilizaremos a chave pra gerar as credenciais, e escolher o algortimo
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            // Agora que temos as credenciais de registro, precisamos criar o desencriptador do token de segurança
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -88,14 +107,9 @@ namespace AppRelacionamentos.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            // Agora com o TokenHandler podemos criar o token
-
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return Ok(new {
-                token = tokenHandler.WriteToken(token)
-            });
-
+            return tokenHandler.WriteToken(token);
         }
 
     }
