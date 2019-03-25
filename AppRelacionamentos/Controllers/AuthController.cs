@@ -20,7 +20,6 @@ namespace AppRelacionamentos.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthRepository repo;
         private readonly IConfiguration config;
         private readonly UserManager<User> userManager;
         private readonly SignInManager<User> singnInManager;
