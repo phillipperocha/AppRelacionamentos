@@ -1,4 +1,6 @@
 ﻿using AppRelacionamentos.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -7,30 +9,46 @@ using System.Threading.Tasks;
 
 namespace AppRelacionamentos.Data
 {
-    public class DataContext : DbContext
-    {
+    // Não precisamos mais adicionar o DbSet<Users> já que iremos herdar o banco agora de IdentityDbContext
+    // que nos dá suporte as classes do Entity Framework para Identity.
 
-        // Para funcionar a herança com o DBContext nós precisamos ter acesso as opções do DBContext.
-        // Sendo assim, precisamos instanciá-lo no construtor,linkando as opções da classe mãe
+    // Se quiséssemos que nossas PKs fossem <ints> teriamos que colcoar a herança assim:
+    // DataContext : IdentityDbContext<User, Role, int, IndentityUserClaim<int>, UserRole, IdentityUserLogin<int>, IdentityRoleClaim<int>, IdentityUserToken<int>>
+    public class DataContext : IdentityDbContext<User, Role, string, IdentityUserClaim<string>, UserRole, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>
+    {
 
         public DataContext(DbContextOptions<DataContext> options) : base (options)
         {
-
         }
 
-        // Agora na nossa classe DataContext, para dizer ao Entity Framework quais são as nossas entidades
-        // Precisamos passar algumas propriedades.
-
-        // Essas propriedades são do tipo DbSet
-        // Precisamos dizer qual o tipo, passando ele no generics
-
-        // A convenção é passar o nome no plural da nossa entidade, esse nome será o nome da
-        // nossa tabela quando o banco de dados for criado.
         public DbSet<Value> Values { get; set; }
-
-        // Isso é o que precisamos da nossa classe DataContext.
-        // Agora precisamos informar a nossa aplicação sobre isso na nossa classe Startup.cs
-
         public DbSet<User> Users { get; set; }
+
+        
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            // Como estamos usando o Identity agora precisamos chamar o Base aqui dentro do OnModelCreating()
+            // Então aqui configura o schema que é preciso para o Entity Framework fazer o Identity.
+            base.OnModelCreating(builder);
+
+            builder.Entity<UserRole>(userRole =>
+            {
+                // Esse espaço é para que o nosso Entity Framework saiba sobre o relacionamento entre
+                // os nossos Users, Roles e nossos User Roles.
+                // Isso faz um relacionamento many to many
+                userRole.HasKey(ur => new {ur.UserId, ur.RoleId});
+
+                userRole.HasOne(ur => ur.Role)
+                    .WithMany(r => r.UserRoles)
+                    .HasForeignKey(ur=> ur.RoleId)
+                    .IsRequired();
+
+                userRole.HasOne(ur => ur.User)
+                    .WithMany(r => r.UserRoles)
+                    .HasForeignKey(ur => ur.UserId)
+                    .IsRequired();
+                
+            });
+        }
     }
 }

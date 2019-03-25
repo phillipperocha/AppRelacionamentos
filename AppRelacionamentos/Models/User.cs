@@ -1,13 +1,27 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
+
 namespace AppRelacionamentos.Models
 {
-    public class User
+    // Aqui ele usará o Id como uma string. Se quisermos que seja como um int temos que herdar
+    // User : IdentityUser<int>
+    public class User : IdentityUser
     {
-        public int Id { get; set; }
-        public string Username { get; set; }
-        // 1- Para guardar nossa senha no banco a guardaremos como um PasswordHash
-        public byte[] PasswordHash { get; set; }
-        // Nosso passwordSalt vai ser como uma chave, para ser possível recriar o Hash e comparar com a senha que o usuário digitar
-        public byte[] PasswordSalt { get; set; }
-        
+        public string Gender { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public string KnownAs { get; set; }
+        public DateTime Created { get; set; }
+        public DateTime LastActive { get; set; }
+        public string Introduction { get; set; }
+        public string LookingFor { get; set; }
+        public string Interests { get; set; }
+        public string City { get; set; }
+        public string Country { get; set; }
+        // public ICollection<Photo> Photos { get; set; }
+        // public ICollection<Like> Likers { get; set; }
+        // public ICollection<Like> Likees { get; set; }
+        public ICollection<UserRole> UserRoles { get; set; }
     }
 }

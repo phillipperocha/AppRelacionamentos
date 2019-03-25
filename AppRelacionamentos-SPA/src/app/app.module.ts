@@ -1,26 +1,30 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-// Aqui a importação do HttpClientModule para consumirmos a API
 import { HttpClientModule} from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
-import { AppRoutingModule } from './app-routing.module';
+ // import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-// Precisamos importar os componentes quando gerados como aqui
-import { ValueComponent } from './value/value.component';
+import { NavComponent } from './nav/nav.component';
+import { AuthService } from './_services/auth.service';
+import { HomeComponent } from './home/home.component';
+import { RegisterComponent } from './register/register.component';
 
 @NgModule({
    declarations: [
       AppComponent,
-      // Além de declará-los!
-      ValueComponent
+      NavComponent,
+      HomeComponent,
+      RegisterComponent
    ],
    imports: [
       BrowserModule,
-      // Aqui importando o serviço
       HttpClientModule,
-      AppRoutingModule
+      FormsModule
    ],
-   providers: [],
+   providers: [
+      AuthService
+   ],
    bootstrap: [
       AppComponent
    ]
